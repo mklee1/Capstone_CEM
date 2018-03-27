@@ -6,7 +6,7 @@ net = alexnet;
 inputSize = net.Layers(1).InputSize;
 
 %for i = 1:length(images)
-for i = 1:50
+for i = 1:200
     disp(i)
     img = images(:,i);
     resizeFactor = inputSize(1)/length(img)^0.5;
