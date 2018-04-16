@@ -61,19 +61,63 @@ def digit_segment(image):
                 return
     return result
 
-def trace(image, row, col, length):
-    finished = False
+def trace(image, row, col, length, loc=1):
+    newrow,newcol = row,col
     if (row == -1 and col == -1):
         return image
     else:
         lastrow, lastcol = row,col
-        (newrow, newcol) = find_neighbor(image, row, col, length)
+        (newrow, newcol) = find_moore_neighbor(image, row, col, length, loc)
         print(" (" + str(newrow) + "," + str(newcol) + ")")
         image[lastrow][lastcol] = 2
         image[newrow][newcol] = 3
-        print_2dlist(image)
-        img = trace(image, newrow, newcol, length)
 
+        try:
+            # take difference in location to get backtrack direction
+            (drow, dcol) = (newrow-lastrow, newcol-lastcol)
+            loc = inv_dirs[(drow,dcol)]-4
+            print_2dlist(image)
+            print("start next from " + dirs1[loc])
+        except:
+            print("hello")
+        img = trace(image, newrow, newcol, length, loc)
+    return image
+
+dirs = {1:(-1,-1), 2:(-1,0), 3:(-1,1),
+        8:(0,-1),            4:(0,1),
+        7:(1,-1),  6:(1,0),  5:(1,1)}
+
+inv_dirs = {v: k for k, v in dirs.items()}
+
+#dirs1 for printing
+dirs1 = {1:"top left....", 2:"top.........", 3: "top right...",
+         4:"right.......", 5:"bottom right", 6:"bottom......",
+         7:"bottom left.", 8:"left........"}
+
+def bound(row, col, L, ind):
+    if not (0 <= row and row <= L):
+        return False
+    if not (0 <= col and col <= L):
+        return False
+    return True
+
+def find_moore_neighbor(img, R, C, L, start):
+    print("Init: " + str(R) + " " + str(C))
+    for i in range(8):
+        ind = (start+i-1)%8 +1
+
+        addrow, addcol = dirs[ind]
+        nr = R + addrow
+        nc = C + addcol
+        print("checking " + dirs1[ind] + "...", end='')
+
+        if (bound(nr,nc,L,ind) and img[nr][nc]==1):
+            print("FOUND!")
+            return nr, nc
+        print("continuing")
+    return -1,-1
+
+#find_neighbor is depracated
 def find_neighbor(image, row, col, length):
     newrow = -1
     newcol = -1
@@ -106,13 +150,7 @@ def find_neighbor(image, row, col, length):
         print("Don't know what this means")
     return (newrow, newcol)
 
-def find_outside_neighbor(image, row, col, length):
-    newrow, newcol = -1, -1
-    
-    return (newrow, newcol)
-
-
-resized = image_resize("netImages/img1.jpg",15)
+resized = image_resize("netImages/img1.jpg",40)
 resized_list = ndarray_to_2dlist(resized)
 print_2dlist(resized_list)
 segmented = digit_segment(resized_list)
