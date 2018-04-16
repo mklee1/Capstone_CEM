@@ -14,6 +14,7 @@ def image_resize(filename, length, width=-1):
     return resized
 
 def ndarray_to_2dlist(image):
+    # convert numpy array to 2dlist
     result = []
     row = []
     length = image.shape[0]
@@ -29,25 +30,20 @@ def ndarray_to_2dlist(image):
     return result
 
 def print_2dlist(image):
+    # print 2d list for testing purposes
     for i in range(len(image)):
         for j in range(len(image[0])):
             if image[i][j] == 0:
-                print('_', end='')
+                print('_', end='') # white space
             elif image[i][j] == 1:
-                print('O', end='')
-            elif image[i][j] == 2:
-                print('@', end='')
+                print('O', end='') # not visited black space
+            elif image[i][j] == 2: 
+                print('@', end='') # visited black space
             elif image[i][j] == 3:
-                print('X', end='')
+                print('X', end='') # current location
             else:
                 print(" ")
         print("")
-
-def sum(row):
-    result = 0
-    for i in row:
-        result += i
-    return result
 
 def digit_segment(image):
     result = []
@@ -75,11 +71,11 @@ def trace(image, row, col, length, loc=1):
         try:
             # take difference in location to get backtrack direction
             (drow, dcol) = (newrow-lastrow, newcol-lastcol)
-            loc = inv_dirs[(drow,dcol)]-4
+            loc = (inv_dirs[(drow,dcol)]+4) % 8 # flip to get original direction
             print_2dlist(image)
             print("start next from " + dirs1[loc])
         except:
-            print("hello")
+            pass
         img = trace(image, newrow, newcol, length, loc)
     return image
 
@@ -117,40 +113,7 @@ def find_moore_neighbor(img, R, C, L, start):
         print("continuing")
     return -1,-1
 
-#find_neighbor is depracated
-def find_neighbor(image, row, col, length):
-    newrow = -1
-    newcol = -1
-    
-    if (col != length-1 and image[row][col+1] == 1):
-        print("right", end='')
-        newrow, newcol = row, col+1
-    elif (row != length-1 and col != length-1 and image[row+1][col+1] == 1):
-        print("bottom right", end='')
-        newrow, newcol = row+1,col+1
-    elif (row != length-1 and image[row+1][col] == 1):
-        print("bottom", end='')
-        newrow,newcol = row+1,col
-    elif (row != length-1 and col != 0 and image[row+1][col-1] == 1):
-        print("bottom left", end='')
-        newrow,newcol = row+1,col-1
-    elif (col != 0 and image[row][col-1] == 1):
-        print("left", end='')
-        newrow,newcol = row,col-1
-    elif (row != 0 and col != 0 and image[row-1][col-1] == 1):
-        print("top left", end='')
-        newrow, newcol = row-1, col-1
-    elif (row != 0 and image[row-1][col] == 1):
-        print("top", end='')
-        newrow, newcol = row-1,col
-    elif (row != 0 and col != length-1 and image[row-1][col+1] == 1):
-        print("top right", end='')
-        newrow, newcol = row-1,col+1
-    else:
-        print("Don't know what this means")
-    return (newrow, newcol)
-
-resized = image_resize("netImages/img1.jpg",40)
+resized = image_resize("netImages/img1.jpg",20)
 resized_list = ndarray_to_2dlist(resized)
 print_2dlist(resized_list)
 segmented = digit_segment(resized_list)
