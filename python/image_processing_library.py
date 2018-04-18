@@ -45,6 +45,18 @@ def print_2dlist(image):
                 print(" ")
         print("")
 
+def num_neighbors(image, row, col):
+    num_neighbors = 0
+    for i in range(8):
+        ind = i+1
+        addrow, addcol = dirs[ind]
+        nr = row + addrow
+        nc = col + addcol
+
+        if (bound(nr,nc,len(image),ind) and image[nr][nc]>=1):
+            num_neighbors += 1
+    return num_neighbors
+
 def digit_segment(image):
     result = []
     length = len(image)
@@ -71,7 +83,7 @@ def trace(image, row, col, length, loc=1):
         try:
             # take difference in location to get backtrack direction
             (drow, dcol) = (newrow-lastrow, newcol-lastcol)
-            loc = (inv_dirs[(drow,dcol)]+4) % 8 # flip to get original direction
+            loc = (inv_dirs[(drow,dcol)]+4) % 8 +1 # flip to get original direction
             print_2dlist(image)
             print("start next from " + dirs1[loc])
         except:
@@ -105,15 +117,19 @@ def find_moore_neighbor(img, R, C, L, start):
         addrow, addcol = dirs[ind]
         nr = R + addrow
         nc = C + addcol
+        nn = num_neighbors(img, nr, nc) > 1
         print("checking " + dirs1[ind] + "...", end='')
 
-        if (bound(nr,nc,L,ind) and img[nr][nc]==1):
+        if (bound(nr,nc,L,ind) and img[nr][nc]==2):
+            print("End condition")
+            return -1,-1
+        elif (bound(nr,nc,L,ind) and img[nr][nc]==1 and nn):
             print("FOUND!")
             return nr, nc
         print("continuing")
     return -1,-1
 
-resized = image_resize("netImages/img1.jpg",20)
+resized = image_resize("netImages/img1.jpg",40)
 resized_list = ndarray_to_2dlist(resized)
 print_2dlist(resized_list)
 segmented = digit_segment(resized_list)
