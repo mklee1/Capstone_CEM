@@ -17,13 +17,15 @@ def ndarray_to_2dlist(image):
     # convert numpy array to 2dlist
     result = []
     row = []
+    white_limit = 50
     length = image.shape[0]
     width = image.shape[1]
     for i in range(length):
         for j in range(width):
             add = 0
-            if image[i,j,0] > 0:
+            if image[i,j,0] > white_limit:
                 add = 1
+            # add = image[i,j,0]
             row.append(add)
         result.append(row)
         row = []
@@ -61,12 +63,63 @@ def digit_segment(image):
     result = []
     length = len(image)
     width = len(image[0])
-    for row in range(length):
-        for col in range(width):
+    for col in range(width):
+        for row in range(length):
             if image[row][col] == 1:
                 img = trace(image, row, col, length)
+                bounds = get_segment_bounds(img)
                 print_2dlist(img)
-                return
+                print(bounds)
+                segment = cut_image(img, bounds)
+                print_2dlist(segment)
+                return segment
+    return result
+
+def cut_image(img, bounds):
+    minRow = bounds[0]
+    maxRow = bounds[1]+1
+    minCol = bounds[2]
+    maxCol = bounds[3]+1
+    result = []
+    result.append([0]*20)
+    result.append([0]*20)
+    imgI, imgJ = 0, 0
+    for i in range(maxRow-minRow):
+        resI = 0
+        imgI = i + minRow
+        newRow = [0,0]
+        for j in range(maxCol-minCol):
+            imgJ = j + minCol
+            newRow.append(img[imgI][imgJ])
+        newRow.append(0)
+        newRow.append(0)
+        result.append(newRow)
+    result.append([0]*20)
+    result.append([0]*20)
+    return result
+
+def get_segment_bounds(image):
+    result = []
+    length = len(image)
+    width = len(image[0])
+    minRow = length
+    minCol = width
+    maxRow = 0
+    maxCol = 0
+    for row in range(length):
+        for col in range(width):
+            element = image[row][col]
+            if (element == 2):
+                if row < minRow:
+                    minRow = row
+                elif row > maxRow:
+                    maxRow = row
+
+                if col < minCol:
+                    minCol = col
+                elif col > maxCol:
+                    maxCol = col
+    result = [minRow, maxRow, minCol, maxCol]
     return result
 
 def trace(image, row, col, length, loc=1):
@@ -76,7 +129,7 @@ def trace(image, row, col, length, loc=1):
     else:
         lastrow, lastcol = row,col
         (newrow, newcol) = find_moore_neighbor(image, row, col, length, loc)
-        print(" (" + str(newrow) + "," + str(newcol) + ")")
+        # print(" (" + str(newrow) + "," + str(newcol) + ")")
         image[lastrow][lastcol] = 2
         image[newrow][newcol] = 3
 
@@ -84,8 +137,8 @@ def trace(image, row, col, length, loc=1):
             # take difference in location to get backtrack direction
             (drow, dcol) = (newrow-lastrow, newcol-lastcol)
             loc = (inv_dirs[(drow,dcol)]+4) % 8 +1 # flip to get original direction
-            print_2dlist(image)
-            print("start next from " + dirs1[loc])
+            # print_2dlist(image)
+            # print("start next from " + dirs1[loc])
         except:
             pass
         img = trace(image, newrow, newcol, length, loc)
@@ -110,7 +163,7 @@ def bound(row, col, L, ind):
     return True
 
 def find_moore_neighbor(img, R, C, L, start):
-    print("Init: " + str(R) + " " + str(C))
+    # print("Init: " + str(R) + " " + str(C))
     for i in range(8):
         ind = (start+i-1)%8 +1
 
@@ -118,18 +171,23 @@ def find_moore_neighbor(img, R, C, L, start):
         nr = R + addrow
         nc = C + addcol
         nn = num_neighbors(img, nr, nc) > 1
-        print("checking " + dirs1[ind] + "...", end='')
+        # print("checking " + dirs1[ind] + "...", end='')
 
         if (bound(nr,nc,L,ind) and img[nr][nc]==2):
             print("End condition")
             return -1,-1
         elif (bound(nr,nc,L,ind) and img[nr][nc]==1 and nn):
-            print("FOUND!")
+            # print("FOUND!")
             return nr, nc
-        print("continuing")
+        # print("continuing")
     return -1,-1
 
 resized = image_resize("netImages/img1.jpg",40)
+resized = cv2.imread("test_segment2.jpg") 
 resized_list = ndarray_to_2dlist(resized)
-print_2dlist(resized_list)
+# print(resized_list)
+# print_2dlist(resized_list)
+
+# print(len(resized_list))
+# print(len(resized_list[0]))
 segmented = digit_segment(resized_list)
