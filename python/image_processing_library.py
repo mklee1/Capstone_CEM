@@ -67,9 +67,9 @@ def digit_segment(image):
         for row in range(length):
             if image[row][col] == 1:
                 img = trace(image, row, col, length)
-                bounds = get_segment_bounds(img)
-                print_2dlist(img)
-                print(bounds)
+                bounds = get_bounds(img, 2)
+                # print_2dlist(img)
+                # print(bounds)
                 segment = cut_image(img, bounds)
                 print_2dlist(segment)
                 return segment
@@ -96,9 +96,12 @@ def cut_image(img, bounds):
         result.append(newRow)
     result.append([0]*20)
     result.append([0]*20)
+    print(bounds)
+    print("hello", len(result), len(result[0]))
     return result
 
-def get_segment_bounds(image):
+def get_bounds(image, search):
+    # search = 1 for clearing space, 2 for cutting
     result = []
     length = len(image)
     width = len(image[0])
@@ -109,7 +112,7 @@ def get_segment_bounds(image):
     for row in range(length):
         for col in range(width):
             element = image[row][col]
-            if (element == 2):
+            if (element == search):
                 if row < minRow:
                     minRow = row
                 elif row > maxRow:
@@ -182,12 +185,26 @@ def find_moore_neighbor(img, R, C, L, start):
         # print("continuing")
     return -1,-1
 
-resized = image_resize("netImages/img1.jpg",40)
-resized = cv2.imread("test_segment2.jpg") 
-resized_list = ndarray_to_2dlist(resized)
+def remove_spacing(img):
+
+    return result
+
+resized = image_resize("netImages/img1.jpg",20)
+resized = cv2.imread("test_segment2.jpg")
+resized = ndarray_to_2dlist(resized)
+print_2dlist(resized)
+bounds = get_bounds(resized, 1)
+print(len(resized), len(resized[0]))
+print(bounds)
+seg = cut_image(resized, bounds)
+print("\nafter cutting\n")
+print_2dlist(seg)
+
+"""
 # print(resized_list)
-# print_2dlist(resized_list)
+print_2dlist(resized_list)
 
 # print(len(resized_list))
 # print(len(resized_list[0]))
 segmented = digit_segment(resized_list)
+"""
