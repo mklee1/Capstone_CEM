@@ -1,0 +1,111 @@
+#result {
+	-fx-border-color: #d9b38c;
+	-fx-border-width: 4 4 4 4;
+	-fx-border-style: solid;
+	-fx-background-color: #ffffff;
+	-fx-alignment: center;
+	-fx-font-size: 40;
+}
+
+#first {
+	-fx-background-color: #00ffbf;
+}
+
+#second {
+	-fx-background-color: #00ffbd;
+}
+
+#btn {
+    -fx-background-color: #CCFF99;
+    -fx-font-weight: bold;
+}
+
+#btn2 {
+    -fx-background-color: #ff00c4;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
+}
+
+#btn3 {
+    -fx-background-color: #d3d7d8;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
+}
+
+#traverse {
+	-fx-background-color: #008cba;
+    -fx-border: none;
+    -fx-padding: 15px 32px;
+    -fx-text-align: center;
+    -fx-text-decoration: none;
+    -fx-display: inline-block;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+}
+
+#comboBox {
+	-fx-border-radius: 50px;
+	-fx-background-radius: 50px;
+	-fx-effect: dropshadow( three-pass-box, rgba(0,0,0,0.6), 5, 0.0, 0, 1);
+	-fx-font-family: 'Times New Roman';
+	-fx-font-weight: 700;
+}
+
+#label {
+	-fx-font-size: 15;
+	-fx-font-family: 'Times New Roman';
+	-fx-font-weight: 700;
+}
+
+#box {
+	-fx-background-radius: 25px;
+}
+
+@font-face {
+	src: url("/digital-7/digital-7.ttf");
+}
+
+#elapsed {
+	-fx-font-family: "digital-7";
+	-fx-font-size: 30px;
+	-fx-font-weight: bold;
+    -fx-text-fill: #000000;
+    -fx-effect: innershadow( three-pass-box , rgba(0,0,0,0.7) , 6, 0.0 , 0 , 2 );
+}
+
+#font {
+	-fx-font-size: 35px;
+	-fx-font-family: "Arial Black";
+    -fx-text-fill: #818181;
+    -fx-effect: innershadow( three-pass-box , rgba(0,0,0,0.7) , 6, 0.0 , 0 , 2 );
+}
+
+#font2 {
+	-fx-font-size: 20px;
+	-fx-font-family: "Arial Black";
+    -fx-text-fill: #818181;
+    -fx-effect: innershadow( three-pass-box , rgba(0,0,0,0.7) , 6, 0.0 , 0 , 2 );
+}
+
+#font3 {
+	-fx-font-size: 20px;
+	-fx-font-family: "Arial Black";
+    -fx-text-fill: #ffffff;
+}
+
+
+#font4 {
+	-fx-font-size: 18px;
+	-fx-font-family: "Arial Black";
+    -fx-text-fill: #818181;
+    -fx-effect: innershadow( three-pass-box , rgba(0,0,0,0.7) , 6, 0.0 , 0 , 2 );
+}
+
+#option {
+	-fx-border-width: 0 0 0 0;
+	-fx-border-style: solid;
+}
+
+#timer {
+	-fx-background-color: transparent;
+}
