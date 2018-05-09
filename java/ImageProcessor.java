@@ -14,20 +14,24 @@ public class ImageProcessor {
     private final Map<Integer, int[]> dirs;
     private final Map<int[], Integer> inverseDirs;
     private final Map<Integer, String> dirs1;
+    private int[][][][] param11 = [32][1][3][3];
+    private int[][] param21 = [32][1];
+    private int[][] param15 = [7200][10];
+    private int[][] param25 = [1][10];
 
     private Map<Integer, int[]> dirsConstruct() {
-    	Map<Integer, int[]> res = new HashMap<>();
-    	int[] arr1 = {-1, 1};
-    	int[] arr2 = {-1, 0};
-    	int[] arr3 = {0, 1};
-    	int[] arr4 = {1, 1};
-    	int[] arr5 = {1, 0};
-    	int[] arr6 = {1, -1};
-    	
-    	res.put(1, arr1);
-    	res.put(2, arr2);
+        Map<Integer, int[]> res = new HashMap<>();
+        int[] arr1 = {-1, 1};
+        int[] arr2 = {-1, 0};
+        int[] arr3 = {0, 1};
+        int[] arr4 = {1, 1};
+        int[] arr5 = {1, 0};
+        int[] arr6 = {1, -1};
+
+        res.put(1, arr1);
+        res.put(2, arr2);
         res.put(3, arr1);
-        res.put(4,  arr3);
+        res.put(4, arr3);
         res.put(5, arr4);
         res.put(6, arr5);
         res.put(7, arr6);
@@ -55,6 +59,51 @@ public class ImageProcessor {
         dirs1.put(6, "bottom......");
         dirs1.put(7, "bottom left.");
         dirs1.put(8, "left........");
+    }
+
+    public int[][][][] getParam11() { return param11; }
+    public int[][] getParam21() { return param21; }
+    public int[][] getParam15() { return param15; }
+    public int[][] getParam25() { return param25; }
+
+    public void parse_params(String filename) {
+        filename = "b32e25.txt.new";
+        FileReader fr = new FileReader(filename);
+        BufferedReader br = new BufferedReader(fr);
+        String line == null;
+        int pcount = -1;
+
+        while ( (line = br.readline()) != null ) {
+            // determine if we have switched to a new param
+            if (line.startsWith("Param 1 for Layer 1")) {
+                pcount = 11;
+                continue;
+            }
+            else if (line.startsWith("Param 2 for Layer 1")) {
+                pcount = 21;
+                continue;
+            }
+            else if (line.startsWith("Param 1 for Layer 5")) {
+                pcount = 15;
+                continue;
+            }
+            else if (line.startsWith("Param 2 for Layer 5")) {
+                pcount = 25;
+                continue;
+            }
+
+            // continue parsing line
+            switch(pcount) {
+                case 11:
+                    break;
+                case 21:
+                    break;
+                case 15:
+                    break;
+                case 25:
+                    break;
+            }
+        }
     }
 
     public Image imageResize(String filename, int length, int width) {
