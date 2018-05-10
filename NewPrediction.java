@@ -10,9 +10,9 @@ public class NewPrediction {
         Double[][][][] x1 = (Double[][][][]) results.get(0);
         int[] conv_out_dim = (int[]) results.get(1);
         Double[][][][] x2 = relu_forward(x1);
-        Double[] x3 = maxpool_forward(x2, conv_out_dim);
-        double[][] x4 = flatten_forward(x3);
-        double[][] x5 = FC_forward(x4, FC_W, FC_b);
+        Double[][][][] x3 = maxpool_forward(x2, conv_out_dim);
+        Double[][] x4 = flatten_forward(x3);
+        Double[][] x5 = FC_forward(x4, FC_W, FC_b);
         return 0;
     }
     // helper method which performs matrix multiplication
@@ -505,6 +505,26 @@ public class NewPrediction {
         
         return res;
     }
+    
+    public static Double[][][][] reshape(Double[] matrix, int x1, int x2,
+    		                             int x3, int x4) {
+    	
+    	Double[][][][] res = new Double[x1][x2][x3][x4];
+        int idx = 0;
+        
+    	for (int i = 0; i < x1; i++) {
+    		for (int j = 0; j < x2; j++) {
+    			for (int k = 0; k < x3; k++) {
+    				for (int l = 0; l < x4; l++) {
+    					res[i][j][k][l] = matrix[idx];
+    					idx++;
+    				}
+    			}
+    		}
+    	}
+        return res;
+    }
+
 
     public static Double[][] reshape4DSpecial(Double[][][][] matrix, int r, int c) {
     	
@@ -608,7 +628,7 @@ public class NewPrediction {
         return res;
     }
 
-    public static Double[] maxpool_forward(Double[][][][] X, int[] conv_out_dim) {
+    public static Double[][][][] maxpool_forward(Double[][][][] X, int[] conv_out_dim) {
         int n_X = X.length;
 
         int d_X = conv_out_dim[0];
@@ -628,17 +648,27 @@ public class NewPrediction {
         Double[][] x_col = im2_col_indices(x_reshaped, size, size, 0, stride);
         Double[] maxes = argmax(x_col);
    
-        
-        return maxes;
+        Double[][][][] out = reshape(maxes, h_out, w_out, n_X, d_X);
+        out = transpose3(out);
+        return out;
     }
     
-    public static Double[] ravel(Double[][] arr) {
+    public static Double[] ravel(Double[][][][] arr) {
 
-        Double[] res = new Double[arr.length * arr[0].length];
+    	int iLen = arr.length;
+    	int jLen = arr[0].length;
+    	int kLen = arr[0][0].length;
+    	int lLen = arr[0][0][0].length;
+    	
+        Double[] res = new Double[iLen * jLen * kLen * lLen];
         int idx = 0;
-        for (int i = 0; i < arr.length; i++) {
-            for (int j = 0; j < arr[0].length; j++) {
-                res[idx] = arr[i][j];
+        for (int i = 0; i < iLen; i++) {
+            for (int j = 0; j < jLen; j++) {
+                for (int k = 0; k < kLen; k++) {
+                	for (int l = 0; l < lLen; l++) {
+                		res[idx] = arr[i][j][k][l];
+                	}
+                }
             }
             idx++;
         }
@@ -647,11 +677,11 @@ public class NewPrediction {
 
     // KEEP RESULT AS 2D
     // WILL BE MULTIPLIED WITH ANOTHER 2D MATRIX 
-    public static Double[][] flatten_forward(Double[][] X) {
-        int[] x_shape = {1, 1, 28, 28};
-        int[] out_shape = {x_shape[0], -1};
+    public static Double[][] flatten_forward(Double[][][][] X) {
+        int[] x_shape = {X.length, X[0].length, X[0][0].length, X[0][0][0].length};
+        //int[] out_shape = {x_shape[0], -1};
         Double[] raveled = ravel(X);
-        Double[][] res = {raveled};    
+        Double[][] res = reshape1D(raveled, x_shape[0], -1);    
         return res;
     }
 
