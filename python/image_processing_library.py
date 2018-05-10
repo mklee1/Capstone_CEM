@@ -52,19 +52,7 @@ def num_neighbors(image, row, col):
         addrow, addcol = dirs[ind]
         nr = row + addrow
         nc = col + addcol
-        if (bound(nr,nc,len(image),ind) and image[nr][nc]>=1):
-            num_neighbors += 1
-    return num_neighbors
-
-def num_neighbors2(image, row, col):
-    num_neighbors = 0
-    for i in range(8):
-        ind = i+1
-        addrow, addcol = dirs[ind]
-        nr = row + addrow
-        nc = col + addcol
-        print(nr, nc, image[nr][nc], bound(nr,nc,len(image),ind))
-        if (bound(nr,nc,len(image),ind) and image[nr][nc]>=1):
+        if (bound(nr,nc,len(image),len(image[0]),ind) and image[nr][nc]>=1):
             num_neighbors += 1
     return num_neighbors
 
@@ -78,7 +66,7 @@ def digit_segment(image, bias):
             realCol = col + bias
             if image[row][realCol] == 1:
                 print("start from", realCol, row)
-                img = trace(image, row, realCol, length)
+                img = trace(image, row, realCol, length, width+bias)
                 bounds = get_bounds(img, 2)
                 print(bounds)
                 return bounds
@@ -135,13 +123,13 @@ def get_bounds(image, search):
     result = [minRow, maxRow, minCol, maxCol]
     return result
 
-def trace(image, row, col, length, loc=1):
+def trace(image, row, col, length, width, loc=1):
     newrow,newcol = row,col
     if (row == -1 and col == -1):
         return image
     else:
         lastrow, lastcol = row,col
-        (newrow, newcol) = find_moore_neighbor(image, row, col, length, loc)
+        (newrow, newcol) = find_moore_neighbor(image, row, col, length, width, loc)
         if col > 21:
             print(" (" + str(newrow) + "," + str(newcol) + ")")
         image[lastrow][lastcol] = 2
@@ -156,7 +144,7 @@ def trace(image, row, col, length, loc=1):
                 print("start next from " + dirs1[loc])
         except:
             pass
-        img = trace(image, newrow, newcol, length, loc)
+        img = trace(image, newrow, newcol, length, width, loc)
     return image
 
 dirs = {1:(-1,-1), 2:(-1,0), 3:(-1,1),
@@ -170,22 +158,22 @@ dirs1 = {1:"top left....", 2:"top.........", 3: "top right...",
          4:"right.......", 5:"bottom right", 6:"bottom......",
          7:"bottom left.", 8:"left........"}
 
-def bound(row, col, L, ind):
+def bound(row, col, L, W, ind):
     if not (0 <= row and row <= L):
         return False
-    if not (0 <= col and col <= L):
+    if not (0 <= col and col <= W):
         return False
     return True
 
-def bound2(row, col, L, ind):
-    print(row, col, L)
+def bound2(row, col, L, W, ind):
+    print(row, col, L, W)
     if not (0 <= row and row <= L):
         return False
-    if not (0 <= col and col <= L):
+    if not (0 <= col and col <= W):
         return False
     return True
 
-def find_moore_neighbor(img, R, C, L, start):
+def find_moore_neighbor(img, R, C, L, W, start):
     # print("Init: " + str(R) + " " + str(C))
     for i in range(8):
         ind = (start+i-1)%8 +1
@@ -195,18 +183,18 @@ def find_moore_neighbor(img, R, C, L, start):
         nc = C + addcol
         nn = num_neighbors(img, nr, nc) > 1
         
-        if (R == 5 and C == 25):
+        if (R == 5 and C == 25 and img[nr][nc] == 1):
             print("checking " + dirs1[ind] + "..neighbor ", end="")
             print(img[nr][nc], nr, nc)
-            print("nn:", num_neighbors2(img, nr, nc))
-            print("dirs", dirs[ind])
+            print("nn:", num_neighbors(img, nr, nc))
+            print(bound2(nr,nc,L,W,ind), img[nr][nc]==1, nn)
         else:
             print("checking " + dirs1[ind] + "...")
 
-        if (bound(nr,nc,L,ind) and img[nr][nc]==2):
+        if (bound(nr,nc,L,W,ind) and img[nr][nc]==2):
             print("End condition for moore neighbor")
             return -1,-1
-        elif (bound(nr,nc,L,ind) and img[nr][nc]==1 and nn):
+        elif (bound(nr,nc,L,W,ind) and img[nr][nc]==1 and nn):
             print("FOUND!")
             return nr, nc
         # print("continuing")
