@@ -7,8 +7,6 @@ def image_resize(filename, length, width=-1):
     if width == -1:
         width = length
     image = cv2.imread(filename) 
-    # don't know how this behaves with bad filename
-
     # resize image
     resized = cv2.resize(image, (length, length));
     return resized
@@ -54,26 +52,37 @@ def num_neighbors(image, row, col):
         addrow, addcol = dirs[ind]
         nr = row + addrow
         nc = col + addcol
-
         if (bound(nr,nc,len(image),ind) and image[nr][nc]>=1):
             num_neighbors += 1
     return num_neighbors
 
-def digit_segment(image):
+def num_neighbors2(image, row, col):
+    num_neighbors = 0
+    for i in range(8):
+        ind = i+1
+        addrow, addcol = dirs[ind]
+        nr = row + addrow
+        nc = col + addcol
+        print(nr, nc, image[nr][nc], bound(nr,nc,len(image),ind))
+        if (bound(nr,nc,len(image),ind) and image[nr][nc]>=1):
+            num_neighbors += 1
+    return num_neighbors
+
+def digit_segment(image, bias):
     result = []
     length = len(image)
-    width = len(image[0])
+    width = len(image[0])-bias
+    print("dimensions", length, width)
     for col in range(width):
         for row in range(length):
-            if image[row][col] == 1:
-                img = trace(image, row, col, length)
+            realCol = col + bias
+            if image[row][realCol] == 1:
+                print("start from", realCol, row)
+                img = trace(image, row, realCol, length)
                 bounds = get_bounds(img, 2)
-                # print_2dlist(img)
-                # print(bounds)
-                segment = cut_image(img, bounds)
-                print_2dlist(segment)
-                return segment
-    return result
+                print(bounds)
+                return bounds
+    return -1
 
 def cut_image(img, bounds):
     minRow = bounds[0]
@@ -81,23 +90,24 @@ def cut_image(img, bounds):
     minCol = bounds[2]
     maxCol = bounds[3]+1
     result = []
-    result.append([0]*20)
-    result.append([0]*20)
+    rows = maxRow-minRow
+    cols = maxCol-minCol+4
+    result.append([0]*cols)
+    result.append([0]*cols)
+    
     imgI, imgJ = 0, 0
-    for i in range(maxRow-minRow):
+    for i in range(rows):
         resI = 0
         imgI = i + minRow
         newRow = [0,0]
-        for j in range(maxCol-minCol):
+        for j in range(cols-4):
             imgJ = j + minCol
             newRow.append(img[imgI][imgJ])
         newRow.append(0)
         newRow.append(0)
         result.append(newRow)
-    result.append([0]*20)
-    result.append([0]*20)
-    print(bounds)
-    print("hello", len(result), len(result[0]))
+    result.append([0]*cols)
+    result.append([0]*cols)
     return result
 
 def get_bounds(image, search):
@@ -132,7 +142,8 @@ def trace(image, row, col, length, loc=1):
     else:
         lastrow, lastcol = row,col
         (newrow, newcol) = find_moore_neighbor(image, row, col, length, loc)
-        # print(" (" + str(newrow) + "," + str(newcol) + ")")
+        if col > 21:
+            print(" (" + str(newrow) + "," + str(newcol) + ")")
         image[lastrow][lastcol] = 2
         image[newrow][newcol] = 3
 
@@ -140,8 +151,9 @@ def trace(image, row, col, length, loc=1):
             # take difference in location to get backtrack direction
             (drow, dcol) = (newrow-lastrow, newcol-lastcol)
             loc = (inv_dirs[(drow,dcol)]+4) % 8 +1 # flip to get original direction
-            # print_2dlist(image)
-            # print("start next from " + dirs1[loc])
+            if (col > 21):
+                print_2dlist(image)
+                print("start next from " + dirs1[loc])
         except:
             pass
         img = trace(image, newrow, newcol, length, loc)
@@ -165,6 +177,14 @@ def bound(row, col, L, ind):
         return False
     return True
 
+def bound2(row, col, L, ind):
+    print(row, col, L)
+    if not (0 <= row and row <= L):
+        return False
+    if not (0 <= col and col <= L):
+        return False
+    return True
+
 def find_moore_neighbor(img, R, C, L, start):
     # print("Init: " + str(R) + " " + str(C))
     for i in range(8):
@@ -174,13 +194,20 @@ def find_moore_neighbor(img, R, C, L, start):
         nr = R + addrow
         nc = C + addcol
         nn = num_neighbors(img, nr, nc) > 1
-        # print("checking " + dirs1[ind] + "...", end='')
+        
+        if (R == 5 and C == 25):
+            print("checking " + dirs1[ind] + "..neighbor ", end="")
+            print(img[nr][nc], nr, nc)
+            print("nn:", num_neighbors2(img, nr, nc))
+            print("dirs", dirs[ind])
+        else:
+            print("checking " + dirs1[ind] + "...")
 
         if (bound(nr,nc,L,ind) and img[nr][nc]==2):
-            print("End condition")
+            print("End condition for moore neighbor")
             return -1,-1
         elif (bound(nr,nc,L,ind) and img[nr][nc]==1 and nn):
-            # print("FOUND!")
+            print("FOUND!")
             return nr, nc
         # print("continuing")
     return -1,-1
@@ -192,13 +219,18 @@ def remove_spacing(img):
 resized = image_resize("netImages/img1.jpg",20)
 resized = cv2.imread("test_segment2.jpg")
 resized = ndarray_to_2dlist(resized)
-print_2dlist(resized)
+
 bounds = get_bounds(resized, 1)
-print(len(resized), len(resized[0]))
-print(bounds)
-seg = cut_image(resized, bounds)
-print("\nafter cutting\n")
-print_2dlist(seg)
+img = cut_image(resized, bounds)
+print_2dlist(img)
+
+bounds = digit_segment(img,0)
+while (bounds != -1): 
+    seg = cut_image(img, bounds)
+    print_2dlist(seg)
+    limit = bounds[3]
+    bounds = digit_segment(img, limit)
+    break
 
 """
 # print(resized_list)
