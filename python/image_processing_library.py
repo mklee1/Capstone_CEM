@@ -130,8 +130,6 @@ def trace(image, row, col, length, width, loc=1):
     else:
         lastrow, lastcol = row,col
         (newrow, newcol) = find_moore_neighbor(image, row, col, length, width, loc)
-        if col > 21:
-            print(" (" + str(newrow) + "," + str(newcol) + ")")
         image[lastrow][lastcol] = 2
         image[newrow][newcol] = 3
 
@@ -139,9 +137,6 @@ def trace(image, row, col, length, width, loc=1):
             # take difference in location to get backtrack direction
             (drow, dcol) = (newrow-lastrow, newcol-lastcol)
             loc = (inv_dirs[(drow,dcol)]+4) % 8 +1 # flip to get original direction
-            if (col > 21):
-                print_2dlist(image)
-                print("start next from " + dirs1[loc])
         except:
             pass
         img = trace(image, newrow, newcol, length, width, loc)
@@ -182,20 +177,12 @@ def find_moore_neighbor(img, R, C, L, W, start):
         nr = R + addrow
         nc = C + addcol
         nn = num_neighbors(img, nr, nc) > 1
-        
-        if (R == 5 and C == 25 and img[nr][nc] == 1):
-            print("checking " + dirs1[ind] + "..neighbor ", end="")
-            print(img[nr][nc], nr, nc)
-            print("nn:", num_neighbors(img, nr, nc))
-            print(bound2(nr,nc,L,W,ind), img[nr][nc]==1, nn)
-        else:
-            print("checking " + dirs1[ind] + "...")
 
         if (bound(nr,nc,L,W,ind) and img[nr][nc]==2):
             print("End condition for moore neighbor")
             return -1,-1
         elif (bound(nr,nc,L,W,ind) and img[nr][nc]==1 and nn):
-            print("FOUND!")
+            # print("FOUND!")
             return nr, nc
         # print("continuing")
     return -1,-1
@@ -218,7 +205,6 @@ while (bounds != -1):
     print_2dlist(seg)
     limit = bounds[3]
     bounds = digit_segment(img, limit)
-    break
 
 """
 # print(resized_list)
