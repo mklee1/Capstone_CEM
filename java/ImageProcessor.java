@@ -16,18 +16,18 @@ public class ImageProcessor {
     private final Map<Integer, String> dirs1;
 
     private Map<Integer, int[]> dirsConstruct() {
-    	Map<Integer, int[]> res = new HashMap<>();
-    	int[] arr1 = {-1, 1};
-    	int[] arr2 = {-1, 0};
-    	int[] arr3 = {0, 1};
-    	int[] arr4 = {1, 1};
-    	int[] arr5 = {1, 0};
-    	int[] arr6 = {1, -1};
-    	
-    	res.put(1, arr1);
-    	res.put(2, arr2);
+        Map<Integer, int[]> res = new HashMap<>();
+        int[] arr1 = {-1, 1};
+        int[] arr2 = {-1, 0};
+        int[] arr3 = {0, 1};
+        int[] arr4 = {1, 1};
+        int[] arr5 = {1, 0};
+        int[] arr6 = {1, -1};
+
+        res.put(1, arr1);
+        res.put(2, arr2);
         res.put(3, arr1);
-        res.put(4,  arr3);
+        res.put(4, arr3);
         res.put(5, arr4);
         res.put(6, arr5);
         res.put(7, arr6);
