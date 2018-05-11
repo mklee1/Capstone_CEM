@@ -1,5 +1,6 @@
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.awt.image.Raster;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -58,10 +59,10 @@ public class ImageProcessor {
         dirs1.put(8, "left........");
     }
 
-    public Image imageResize(String filename, int length, int width) {
+    public Image imageResize(String filename, int height, int width) {
 
         if (width == -1) {
-            width = length;
+            width = height;
         }
 
         BufferedImage img = null;
@@ -71,41 +72,36 @@ public class ImageProcessor {
             e.printStackTrace();
         }
 
-        Image resized = img.getScaledInstance(length, length, Image.SCALE_DEFAULT);
-        return resized;
+        img = (BufferedImage)img.getScaledInstance(height, height, Image.SCALE_DEFAULT);
+        return img;
     }
 
-    public int[][] ndarrayTo2DList(double[][][] image) {
-        
-        List<Double> row = new ArrayList<>();
-        int length = image.length;
-        int width = image[0].length;
-        int whiteLimit = 50;
-        Double[][] result = new Double[length][width];
-        for (int i = 0; i < length; i++) {
-            for (int j = 0; j < width; j++) {
-                int add = 0;
-                if (image[i][j][0] > whiteLimit) {
-                    add = 1;
-                }
-                row.add((double) add);
-            }
-            Double[] converted = new Double[row.size()];
-            converted = row.toArray(converted);
-            result[i] = converted;
-            // clear row 
-            row.clear();
-        }
-        return result;
+    public int[][] imageTo2DList(BufferedImage image) {
+    		Raster raster = image.getData();
+    		int width = raster.getWidth();
+    		int height = raster.getHeight();
+    		int [][] img = new int[width][height];
+    		int whiteLimit = 50;
+    		
+    		for (int i = 0; i < width; i++) {
+    			for (int j = 0; j < height; j++) {
+    				int element = raster.getSample(i, j, 0);
+    				if (element > whiteLimit) {
+    					img[i][j] = 1;
+    				}
+    				img[i][j] = 1;
+    			}
+    		}
+    		return img;
     }
     
     // print 2D list for testing purposes
     public void print2DList(int[][] image) {
         
-        int length = image.length;
+        int height = image.length;
         int width = image[0].length;
 
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                 if (image[i][j] == 0) {
                     System.out.print("_");
@@ -148,14 +144,14 @@ public class ImageProcessor {
 
     public int[] digitSegment(int[][] image, int bias) {
     		int realCol;
-    		int length = image.length;
+    		int height = image.length;
     		int width = image[0].length - bias;
     		int[] bounds = {-1, -1, -1, -1};
     		for (int col = 0; col < width; col++) {
-    			for (int row = 0; row < length; row++) {
+    			for (int row = 0; row < height; row++) {
     				realCol = col + bias;
     				if (image[row][realCol] == 1) {
-    					image = trace(image, row, realCol, length, width+bias, -1);
+    					image = trace(image, row, realCol, height, width+bias, -1);
     					bounds = getBounds(image, bias, 2);
     					System.out.println("End Moore tracing" + Arrays.toString(bounds));
     					return bounds;
@@ -165,15 +161,15 @@ public class ImageProcessor {
         return bounds;
     }
     public int[] getBounds(int[][] image, int bias, int search) {
-    		int length = image.length;
+    		int height = image.length;
     		int width = image[0].length;
-    		int minRow = length;
+    		int minRow = height;
     		int minCol = width;
     		int maxRow = 0;
     		int maxCol = 0;
     		int[] result = new int[4];
     		
-    		for (int row = 0; row < length; row++) {
+    		for (int row = 0; row < height; row++) {
     			for (int col = 0; col < width-bias; col++) { 
     				int realCol = col+bias;
     				int element = (int)image[row][realCol];
@@ -197,7 +193,7 @@ public class ImageProcessor {
     		return result;
     }
 
-    private int[][] trace(int[][] image, int row, int col, int length, int width, int loc) {
+    private int[][] trace(int[][] image, int row, int col, int height, int width, int loc) {
         int newRow = row;
         int newCol = col;
         if (row == -1 && col == -1) {
@@ -206,7 +202,7 @@ public class ImageProcessor {
         else {
             int lastRow = row;
             int lastCol = col;
-            int[] info = findMooreNeighbor(image, row, col, length, width, loc);
+            int[] info = findMooreNeighbor(image, row, col, height, width, loc);
             newRow = info[0];
             newCol = info[1];
             System.out.println(" (" + newRow + "," + newCol + ")");
@@ -224,7 +220,7 @@ public class ImageProcessor {
             catch (Exception e) {
                 e.printStackTrace();
             }
-            image = trace(image, newRow, newCol, length, width, loc);
+            image = trace(image, newRow, newCol, height, width, loc);
         }
         return image;
     }
