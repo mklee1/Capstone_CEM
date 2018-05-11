@@ -1093,21 +1093,21 @@ public class Numera extends Application {
 		thin.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				gc.setLineWidth(1);
+				gc.setLineWidth(5);
 			}
 		});
 		
 		medium.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				gc.setLineWidth(2);
+				gc.setLineWidth(10);
 			}
 		});
 		
 		thick.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				gc.setLineWidth(20);
+				gc.setLineWidth(15);
 			}
 		});
 		
