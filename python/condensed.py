@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 import sys
 # from mnist import MNIST
@@ -558,7 +559,7 @@ def main():
         param25[0,9] = float(line[nextComma+1:-2])
 
     parse_params()
-    print("finished parsing params")
+    #print("finished parsing params")
 
 
     ##################
