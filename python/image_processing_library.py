@@ -50,6 +50,9 @@ def print_2dlist(image):
         print("")
 
 def num_neighbors(image, row, col):
+    dirs = {1:(-1,-1), 2:(-1,0), 3:(-1,1),
+        8:(0,-1),            4:(0,1),
+        7:(1,-1),  6:(1,0),  5:(1,1)}
     num_neighbors = 0
     for i in range(8):
         ind = i+1
@@ -127,6 +130,11 @@ def get_bounds(image, bias, search):
     return result
 
 def trace(image, row, col, length, width, loc=1):
+    dirs = {1:(-1,-1), 2:(-1,0), 3:(-1,1),
+        8:(0,-1),            4:(0,1),
+        7:(1,-1),  6:(1,0),  5:(1,1)}
+
+    inv_dirs = {v: k for k, v in dirs.items()}
     newrow,newcol = row,col
     if (row == -1 and col == -1):
         return image
@@ -145,17 +153,6 @@ def trace(image, row, col, length, width, loc=1):
         img = trace(image, newrow, newcol, length, width, loc)
     return image
 
-dirs = {1:(-1,-1), 2:(-1,0), 3:(-1,1),
-        8:(0,-1),            4:(0,1),
-        7:(1,-1),  6:(1,0),  5:(1,1)}
-
-inv_dirs = {v: k for k, v in dirs.items()}
-
-#dirs1 for printing
-dirs1 = {1:"top left....", 2:"top.........", 3: "top right...",
-         4:"right.......", 5:"bottom right", 6:"bottom......",
-         7:"bottom left.", 8:"left........"}
-
 def bound(row, col, L, W, ind):
     if not (0 <= row and row <= L):
         return False
@@ -164,6 +161,10 @@ def bound(row, col, L, W, ind):
     return True
 
 def find_moore_neighbor(img, R, C, L, W, start):
+    dirs = {1:(-1,-1), 2:(-1,0), 3:(-1,1),
+        8:(0,-1),            4:(0,1),
+        7:(1,-1),  6:(1,0),  5:(1,1)}
+
     # print("Init: " + str(R) + " " + str(C))
     for i in range(8):
         ind = (start+i-1)%8 +1
