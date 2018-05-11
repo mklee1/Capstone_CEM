@@ -2,6 +2,8 @@ import cv2
 import math
 import numpy as np
 
+np.set_printoptions(threshold=np.inf)
+
 # Resizes an image of arbitrary size into the size needed
 def image_resize(filename, length, width=-1):
     if width == -1:
@@ -41,6 +43,8 @@ def print_2dlist(image):
                 print('@', end='') # visited black space
             elif image[i][j] == 3:
                 print('X', end='') # current location
+            elif image[i][j] == 255:
+                print('Q', end='')
             else:
                 print(" ")
         print("")
@@ -176,16 +180,62 @@ def find_moore_neighbor(img, R, C, L, W, start):
             return nr, nc
     return -1,-1
 
-resized = cv2.imread("test_segment2.jpg")
-resized = ndarray_to_2dlist(resized)
+def thicken(image):
+    height = len(image)
+    width = len(image[0])
+    for i in range(height):
+        for j in range(width):
+            if image[i][j] == 1:
+                break;
+    return image
 
-bounds = get_bounds(resized, 0, 1)
-img = cut_image(resized, bounds)
-print_2dlist(img)
+def convert255(image):
+    for i in range(len(image)):
+        for j in range(len(image[0])):
+            if image[i][j] > 0:
+                image[i][j] = 255
+    return image
 
-bounds = digit_segment(img,0)
-while (bounds != -1): 
-    seg = cut_image(img, bounds)
-    print_2dlist(seg)
-    limit = bounds[3]+1
-    bounds = digit_segment(img, limit)
+def padArray(segment):
+    maxDim = max(len(segment), len(segment[0]))
+    padToX = 0
+    if maxDim <= 28:
+        padToX = 28
+    elif maxDim <= 56:
+        padToX = 56
+    elif maxDim <= 112:
+        padToX = 112
+    elif maxDim <= 224:
+        padToX = 224
+    else:
+        padToX = 448
+
+    result = np.zeros((padToX, padToX))
+    seg = np.array(segment)
+    x_off = int((padToX - len(segment))/2)
+    y_off = int((padToX - len(segment[0]))/2)
+    result[x_off:seg.shape[0]+x_off, y_off:seg.shape[1]+y_off] = seg
+    return result
+
+def get_segments(filename):
+    result = []
+    resized = cv2.imread(filename)
+    resized = ndarray_to_2dlist(resized)
+
+    bounds = get_bounds(resized, 0, 1)
+    img = cut_image(resized, bounds)
+    print_2dlist(img)
+
+    bounds = digit_segment(img,0)
+    while (bounds != -1): 
+        seg = cut_image(img, bounds)
+        seg = convert255(seg)
+        seg = padArray(seg)
+        # print_2dlist(seg)
+
+        result.append(seg)
+        limit = bounds[3]+1
+        bounds = digit_segment(img, limit)
+    return result
+
+segs = get_segments("test_segment2.jpg")
