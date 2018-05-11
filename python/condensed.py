@@ -1,6 +1,8 @@
 import numpy as np
 import sys
-from mnist import MNIST
+# from mnist import MNIST
+import cv2
+import math
 
 np.set_printoptions(threshold=np.inf) # , suppress=True
 
@@ -21,32 +23,18 @@ np.set_printoptions(threshold=np.inf) # , suppress=True
 
 
 
-
+#############
+# CNN STUFF #
+#############
 
 def predict_single(X, conv_W, conv_b, FC_W, FC_b):
-    # print("FC_W", FC_W[308,:])
-    # print("conv_W dims = ", conv_W.shape)
-    # print("conv_b dims = ", conv_b.shape)
-    # print("FC_W dims = ", FC_W.shape)
-    # print("FC_b dims = ", FC_b.shape)
-    # print("x dims = ", X.shape)
     x1, conv_out_dim = conv_forward(X, conv_W, conv_b)
-    # print("x1 = ", x1[0, 0, :, :])
     x2 = relu_forward(x1)
-    # assert(np.array_equal(x1, x2))
-    # print("x2 dims = ", x2.shape)
     x3 = maxpool_forward(x2, conv_out_dim)
-    # print("x3 = ", x3[0, 0, :, :])
-    # print("x3 dims = ", x3.shape)
     x4 = flatten_forward(x3)
-    # print("x4 dims = ", x4.shape)
     x5 = FC_forward(x4, FC_W, FC_b)
-    # print("x5 dims = ", x5.shape)
-    print("x5 = ", x5)
     return np.argmax(softmax(x5), axis=1)
     
-
-
 def conv_forward(X, W, b): # X has dims 1 x 28 x 28
 
     n_filter = 32
@@ -67,13 +55,9 @@ def conv_forward(X, W, b): # X has dims 1 x 28 x 28
 
     X_col = im2col_indices(
         X, h_filter, w_filter, stride=stride, padding=padding)
-    # print("X_col dims = ", X_col.shape)
     W_row = W.reshape(n_filter, -1)
 
-    # print("W_row @ X_col", (W_row @ X_col).shape)
-    # print("b", b.shape)
     out = W_row @ X_col + b
-    # print("diff", out[3, :] - (W_row @ X_col)[3, :])
     out = out.reshape(n_filter, h_out, w_out, n_X)
     out = out.transpose(3, 0, 1, 2)
     out_dim = (n_filter, h_out, w_out)
@@ -90,8 +74,6 @@ def get_im2col_indices(x_shape, field_height=3, field_width=3, padding=1, stride
 
     i0 = np.repeat(np.arange(field_height,dtype='int32'), field_width)
     i0 = np.tile(i0, C)
-    # print("C", C)
-    # print("i0 dims", i0.shape)
     i1 = stride * np.repeat(np.arange(out_height,dtype='int32'), out_width)
     j0 = np.tile(np.arange(field_width), field_height * C)
     j1 = stride * np.tile(np.arange(out_width,dtype='int32'), int(out_height))
@@ -99,29 +81,18 @@ def get_im2col_indices(x_shape, field_height=3, field_width=3, padding=1, stride
     j = j0.reshape(-1, 1) + j1.reshape(1, -1)
 
     k = np.repeat(np.arange(C,dtype='int32'), field_height * field_width).reshape(-1, 1)
-    # print("i = ", i)
-    # print("j = ", j)
-    # print("k = ", k)
     return (k, i, j)
 
 def im2col_indices(x, field_height=3, field_width=3, padding=1, stride=1):
     """ An implementation of im2col based on some fancy indexing """
     # Zero-pad the input
     p = padding
-    # print("x size", x.shape)
     x_padded = np.pad(x, ((0, 0), (0, 0), (p, p), (p, p)), mode='constant')
-    # if (field_height == 3):
-        # print("x_padded", x_padded[0, 0, :, :])
 
     k, i, j = get_im2col_indices(x.shape, field_height, field_width, padding,
                                stride)
-    # print("x_padded", x_padded.shape)
+
     cols = x_padded[:, k, i, j]
-    # print("k", k)
-    # print("i", i.shape)
-    # print("j", j.shape)
-    # print("cols dim", cols.shape)
-    # print("cols", cols[0,:,:])
     (checka, checkb) = i.shape
     checkd = x.shape[0]
     for d in range(cols.shape[0]):
@@ -134,11 +105,8 @@ def im2col_indices(x, field_height=3, field_width=3, padding=1, stride=1):
     cols = cols.transpose(1, 2, 0).reshape(field_height * field_width * C, -1)
     return cols
 
-
-
 def relu_forward(X):
     return np.maximum(X, 0)
-
 
 def maxpool_forward(X, conv_out_dim):
     n_X = X.shape[0]
@@ -187,6 +155,272 @@ def softmax(x):
     return exp_x / np.sum(exp_x, axis=1, keepdims=True)
 
 
+
+
+
+
+##################
+# IMG PROCESSING #
+##################
+
+# Resizes an image of arbitrary size into the size needed
+def image_resize(filename, length, width=-1):
+    if width == -1:
+        width = length
+    image = cv2.imread(filename) 
+    # resize image
+    resized = cv2.resize(image, (length, length));
+    return resized
+
+def ndarray_to_2dlist(image):
+    # convert numpy array to 2dlist
+    result = []
+    row = []
+    white_limit = 50
+    length = image.shape[0]
+    width = image.shape[1]
+    for i in range(length):
+        for j in range(width):
+            add = 0
+            if image[i,j,0] > white_limit:
+                add = 1
+            # add = image[i,j,0]
+            row.append(add)
+        result.append(row)
+        row = []
+    return result
+
+def print_2dlist(image):
+    # print 2d list for testing purposes
+    for i in range(len(image)):
+        for j in range(len(image[0])):
+            if image[i][j] == 0:
+                print('_', end='') # white space
+            elif image[i][j] == 1:
+                print('O', end='') # not visited black space
+            elif image[i][j] == 2: 
+                print('@', end='') # visited black space
+            elif image[i][j] == 3:
+                print('X', end='') # current location
+            elif image[i][j] > 0:
+                print('Q', end='')
+            else:
+                print(" ")
+        print("")
+
+def num_neighbors(image, row, col):
+    dirs = {1:(-1,-1), 2:(-1,0), 3:(-1,1),
+        8:(0,-1),            4:(0,1),
+        7:(1,-1),  6:(1,0),  5:(1,1)}
+    num_neighbors = 0
+    for i in range(8):
+        ind = i+1
+        addrow, addcol = dirs[ind]
+        nr = row + addrow
+        nc = col + addcol
+        if (bound(nr,nc,len(image),len(image[0]),ind) and image[nr][nc]>=1):
+            num_neighbors += 1
+    return num_neighbors
+
+def digit_segment(image, bias):
+    result = []
+    length = len(image)
+    width = len(image[0])-bias
+    for col in range(width):
+        for row in range(length):
+            realCol = col + bias
+            if image[row][realCol] == 1:
+                img = trace(image, row, realCol, length, width+bias)
+                bounds = get_bounds(img, bias, 2)
+                # print("End Moore tracing", bounds)
+                return bounds
+    return -1
+
+def cut_image(img, bounds):
+    minRow = bounds[0]
+    maxRow = bounds[1]+1
+    minCol = bounds[2]
+    maxCol = bounds[3]+1
+    result = []
+    rows = maxRow-minRow
+    cols = maxCol-minCol+4
+    result.append([0]*cols)
+    result.append([0]*cols)
+    
+    imgI, imgJ = 0, 0
+    for i in range(rows):
+        resI = 0
+        imgI = i + minRow
+        newRow = [0,0]
+        for j in range(cols-4):
+            imgJ = j + minCol
+            newRow.append(img[imgI][imgJ])
+        newRow.append(0)
+        newRow.append(0)
+        result.append(newRow)
+    result.append([0]*cols)
+    result.append([0]*cols)
+    return result
+
+def get_bounds(image, bias, search):
+    # search = 1 for clearing space, 2 for cutting
+    result = []
+    length = len(image)
+    width = len(image[0])
+    minRow = length
+    minCol = width
+    maxRow = 0
+    maxCol = 0
+    for row in range(length):
+        for col in range(width-bias):
+            realCol = col+bias
+            element = image[row][realCol]
+            if (element == search):
+                if row < minRow:
+                    minRow = row
+                elif row > maxRow:
+                    maxRow = row
+
+                if realCol < minCol:
+                    minCol = realCol
+                elif realCol > maxCol:
+                    maxCol = realCol
+    result = [minRow, maxRow, minCol, maxCol]
+    return result
+
+def trace(image, row, col, length, width, loc=1):
+    dirs = {1:(-1,-1), 2:(-1,0), 3:(-1,1),
+        8:(0,-1),            4:(0,1),
+        7:(1,-1),  6:(1,0),  5:(1,1)}
+
+    inv_dirs = {v: k for k, v in dirs.items()}
+    newrow,newcol = row,col
+    if (row == -1 and col == -1):
+        return image
+    else:
+        lastrow, lastcol = row,col
+        (newrow, newcol) = find_moore_neighbor(image, row, col, length, width, loc)
+        image[lastrow][lastcol] = 2
+        image[newrow][newcol] = 3
+
+        try:
+            # take difference in location to get backtrack direction
+            (drow, dcol) = (newrow-lastrow, newcol-lastcol)
+            loc = (inv_dirs[(drow,dcol)]+4) % 8 +1 # flip to get original direction
+        except:
+            pass
+        img = trace(image, newrow, newcol, length, width, loc)
+    return image
+
+def bound(row, col, L, W, ind):
+    if not (0 <= row and row <= L):
+        return False
+    if not (0 <= col and col <= W):
+        return False
+    return True
+
+def find_moore_neighbor(img, R, C, L, W, start):
+    dirs = {1:(-1,-1), 2:(-1,0), 3:(-1,1),
+        8:(0,-1),            4:(0,1),
+        7:(1,-1),  6:(1,0),  5:(1,1)}
+
+    # print("Init: " + str(R) + " " + str(C))
+    for i in range(8):
+        ind = (start+i-1)%8 +1
+
+        addrow, addcol = dirs[ind]
+        nr = R + addrow
+        nc = C + addcol
+        nn = num_neighbors(img, nr, nc) > 1
+        # print("checking " + dirs1[ind] + "...")
+        if (bound(nr,nc,L,W,ind) and img[nr][nc]==2):
+            return -1,-1
+        elif (bound(nr,nc,L,W,ind) and img[nr][nc]==1 and nn):
+            # print("FOUND!")
+            return nr, nc
+    return -1,-1
+
+def thicken(image):
+    height = len(image)
+    width = len(image[0])
+    for i in range(height):
+        for j in range(width):
+            if image[i][j] == 1:
+                break;
+    return image
+
+def convert255(image):
+    for i in range(len(image)):
+        for j in range(len(image[0])):
+            if image[i][j] > 0:
+                image[i][j] = 255
+    return image
+
+def padArray(segment):
+    maxDim = max(len(segment), len(segment[0]))
+    padToX = 0
+    # if maxDim <= 28:
+    #     padToX = 28
+    # elif maxDim <= 56:
+    #     padToX = 56
+    if maxDim <= 112:
+        padToX = 112
+    elif maxDim <= 224:
+        padToX = 224
+    else:
+        padToX = 448
+
+    result = np.zeros((padToX, padToX))
+    seg = np.array(segment)
+    x_off = int((padToX - len(segment))/2)
+    y_off = int((padToX - len(segment[0]))/2)
+    result[x_off:seg.shape[0]+x_off, y_off:seg.shape[1]+y_off] = seg
+    return result
+
+def get_segments(filename):
+    result = []
+    resized = cv2.imread(filename)
+    resized = ndarray_to_2dlist(resized)
+
+    bounds = get_bounds(resized, 0, 1)
+    img = cut_image(resized, bounds)
+    # print_2dlist(img)
+
+    bounds = digit_segment(img,0)
+    while (bounds != -1): 
+        seg = cut_image(img, bounds)
+        seg = convert255(seg)
+        seg = padArray(seg)
+        # print_2dlist(seg)
+
+        result.append(seg)
+        limit = bounds[3]+1
+        bounds = digit_segment(img, limit)
+    return result
+
+def resize(img):
+    # assume img > 25 x 25 to start
+    (rows, cols) = img.shape
+    new_rows = rows
+    new_cols = cols
+    prev_img = img
+    while (new_rows != 28):
+        new_rows = new_rows // 2
+        new_cols = new_cols // 2
+        new_img = np.zeros((new_rows, new_cols))
+        for i in range(new_rows):
+            for j in range(new_cols):
+                new_img[i, j] = (prev_img[i*2, j*2] + prev_img[i*2, j*2+1] + prev_img[i*2+1, j*2] + prev_img[i*2+1, j*2+1]) / 4
+        prev_img = new_img
+    return prev_img
+
+
+
+
+
+
+
+
 def main():
 
 
@@ -196,7 +430,9 @@ def main():
     # images_test, labels_test = mndata.load_testing()
 
 
-
+    ###############
+    # ARG PARSING #
+    ###############
 
     param11 = np.zeros((32,1,3,3))
     param21 = np.zeros((32,1))
@@ -325,30 +561,22 @@ def main():
     print("finished parsing params")
 
 
-    imfile = "screenshot.jpg"
+    ##################
+    # IMG PROCESSING #
+    ##################
 
-    numbers = parse_image(imfile)
+    imfile = "tmid_three.jpg"
+
+    numbers = get_segments(imfile)
 
     for number in numbers:
-        X = number.reshape(1, 1, 28, 28)
+        X = resize(np.array(number))
+        # print_2dlist(X.tolist())
+        X = X.reshape(1, 1, 28, 28)
         a = predict_single(X, param11, param21, param15, param25)
         print(a)
 
-    def resize(img):
-        # assume img > 25 x 25 to start
-        (rows, cols) = img.shape
-        new_rows = rows
-        new_cols = cols
-        prev_img = img
-        while (new_rows != 25):
-            new_rows = new_rows // 2
-            new_cols = new_cols // 2
-            new_img = np.zeros((new_rows, new_cols))
-            for i in range(new_rows):
-                for j in range(new_cols):
-                    new_img[i, j] = (prev_img[i*2, j*2] + prev_img[i*2, j*2+1] + prev_img[i*2+1, j*2] + prev_img[i*2+1, j*2+1]) / 4
-            prev_img = new_img
-        return prev_img
+
 
 
 
