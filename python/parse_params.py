@@ -92,7 +92,7 @@ def case15(line, line2, line3, ac):
     param15[ac,0] = float(line[3:firstComma])
     param15[ac,1] = float(line[firstComma+1:secondComma])
     param15[ac,2] = float(line[secondComma+1:thirdComma])
-    param15[ac,3] = float(line[thirdComma+1:-3])
+    param15[ac,3] = float(line[thirdComma+1:-1])
     
     firstComma = line2.index(",")
     secondComma = line2.index(",", firstComma+1)
@@ -100,11 +100,11 @@ def case15(line, line2, line3, ac):
     param15[ac,4] = float(line2[1:firstComma])
     param15[ac,5] = float(line2[firstComma+1:secondComma])
     param15[ac,6] = float(line2[secondComma+1:thirdComma])
-    param15[ac,7] = float(line2[thirdComma+1:len(line2)-3])
+    param15[ac,7] = float(line2[thirdComma+1:-1])
     
     firstComma = line3.index(",")
     param15[ac,8] = float(line3[1:firstComma])
-    param15[ac,9] = float(line3[firstComma+1:len(line3)-3])
+    param15[ac,9] = float(line3[firstComma+1:-2])
 
 def case25(line, ac):
     print "length of line",
