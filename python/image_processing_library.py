@@ -60,15 +60,13 @@ def digit_segment(image, bias):
     result = []
     length = len(image)
     width = len(image[0])-bias
-    print("dimensions", length, width)
     for col in range(width):
         for row in range(length):
             realCol = col + bias
             if image[row][realCol] == 1:
-                print("start from", realCol, row)
                 img = trace(image, row, realCol, length, width+bias)
-                bounds = get_bounds(img, 2)
-                print(bounds)
+                bounds = get_bounds(img, bias, 2)
+                print("End Moore tracing", bounds)
                 return bounds
     return -1
 
@@ -98,7 +96,7 @@ def cut_image(img, bounds):
     result.append([0]*cols)
     return result
 
-def get_bounds(image, search):
+def get_bounds(image, bias, search):
     # search = 1 for clearing space, 2 for cutting
     result = []
     length = len(image)
@@ -108,18 +106,19 @@ def get_bounds(image, search):
     maxRow = 0
     maxCol = 0
     for row in range(length):
-        for col in range(width):
-            element = image[row][col]
+        for col in range(width-bias):
+            realCol = col+bias
+            element = image[row][realCol]
             if (element == search):
                 if row < minRow:
                     minRow = row
                 elif row > maxRow:
                     maxRow = row
 
-                if col < minCol:
-                    minCol = col
-                elif col > maxCol:
-                    maxCol = col
+                if realCol < minCol:
+                    minCol = realCol
+                elif realCol > maxCol:
+                    maxCol = realCol
     result = [minRow, maxRow, minCol, maxCol]
     return result
 
@@ -160,14 +159,6 @@ def bound(row, col, L, W, ind):
         return False
     return True
 
-def bound2(row, col, L, W, ind):
-    print(row, col, L, W)
-    if not (0 <= row and row <= L):
-        return False
-    if not (0 <= col and col <= W):
-        return False
-    return True
-
 def find_moore_neighbor(img, R, C, L, W, start):
     # print("Init: " + str(R) + " " + str(C))
     for i in range(8):
@@ -177,25 +168,18 @@ def find_moore_neighbor(img, R, C, L, W, start):
         nr = R + addrow
         nc = C + addcol
         nn = num_neighbors(img, nr, nc) > 1
-
+        # print("checking " + dirs1[ind] + "...")
         if (bound(nr,nc,L,W,ind) and img[nr][nc]==2):
-            print("End condition for moore neighbor")
             return -1,-1
         elif (bound(nr,nc,L,W,ind) and img[nr][nc]==1 and nn):
             # print("FOUND!")
             return nr, nc
-        # print("continuing")
     return -1,-1
 
-def remove_spacing(img):
-
-    return result
-
-resized = image_resize("netImages/img1.jpg",20)
 resized = cv2.imread("test_segment2.jpg")
 resized = ndarray_to_2dlist(resized)
 
-bounds = get_bounds(resized, 1)
+bounds = get_bounds(resized, 0, 1)
 img = cut_image(resized, bounds)
 print_2dlist(img)
 
@@ -203,14 +187,5 @@ bounds = digit_segment(img,0)
 while (bounds != -1): 
     seg = cut_image(img, bounds)
     print_2dlist(seg)
-    limit = bounds[3]
+    limit = bounds[3]+1
     bounds = digit_segment(img, limit)
-
-"""
-# print(resized_list)
-print_2dlist(resized_list)
-
-# print(len(resized_list))
-# print(len(resized_list[0]))
-segmented = digit_segment(resized_list)
-"""
