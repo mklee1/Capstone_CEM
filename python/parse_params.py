@@ -14,11 +14,9 @@ def parse_params():
     line3 = None
     arrayCounter = 0
     line = f.readline()
-    while ( line != None ):
+    while ( line != '' ):
         print(line)
-        if (line == ""):
-            continue
-        elif (line[:19] == "Param 1 for Layer 1"):
+        if (line[:19] == "Param 1 for Layer 1"):
             print("Param 1 1")
             pcount = 11
             arrayCounter = 0
@@ -85,7 +83,7 @@ def case11(line, line2, line3, ac):
     param11[ac,0,2,2] = float(line3[secondComma+1:-5])
 
 def case21(line, ac):
-    param21[ac,0] = float(line[1:len(line)-1])
+    param21[ac,0] = float(line[1:-3])
 
 def case15(line, line2, line3, ac):
     firstComma = line.index(",")
@@ -109,17 +107,21 @@ def case15(line, line2, line3, ac):
     param15[ac,9] = float(line3[firstComma+1:len(line3)-3])
 
 def case25(line, ac):
-    nextComma
+    print "length of line",
+    print(len(line))
+    print(line)
     comma = line.index(",")
-    param25[0,0] = float(line[1,comma])
+    param25[0,0] = float(line[1:comma])
     ind = 1
     nextComma = line.index(",", comma+1)
-    while (nextComma != -1):
-        param25[0,ind] = float(line[comma+1, nextComma])
+    fool = False
+    while (nextComma != 101):
+        param25[0,ind] = float(line[comma+1:nextComma])
         comma = nextComma
-        ind+= 1
-    nextcomma = line.index(",", comma+1)
-    param25[0,ind] = float(line[comma+1, len(line)-2])
+        ind += 1
+        nextComma = line.index(",", comma+1)
+    param25[0,8] = float(line[comma+1:nextComma])
+    param25[0,9] = float(line[nextComma+1:-3])
 
 parse_params()
-print("finished")
+print("finished parsing params")
