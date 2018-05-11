@@ -83,19 +83,19 @@ public class ParamParser {
     public void case11(String line, String line2, String line3, int ac) {
         int firstComma = line.indexOf(",");
         int secondComma = line.indexOf(",", firstComma+1);
-        param11[ac][0][0][0] = Double.parseDouble(line.substring(3,firstComma));
+        param11[ac][0][0][0] = Double.parseDouble(line.substring(1,firstComma));
         param11[ac][0][0][1] = Double.parseDouble(line.substring(firstComma+1,secondComma));
         param11[ac][0][0][2] = Double.parseDouble(line.substring(secondComma+1,line.length()-1));
 
         firstComma = line2.indexOf(",");
         secondComma = line2.indexOf(",", firstComma+1);
-        param11[ac][0][1][0] = Double.parseDouble(line2.substring(1,firstComma));
+        param11[ac][0][1][0] = Double.parseDouble(line2.substring(0,firstComma));
         param11[ac][0][1][1] = Double.parseDouble(line2.substring(firstComma+1,secondComma));
         param11[ac][0][1][2] = Double.parseDouble(line2.substring(secondComma+1,line2.length()-1));
 
         firstComma = line3.indexOf(",");
         secondComma = line3.indexOf(",", firstComma+1);
-        param11[ac][0][2][0] = Double.parseDouble(line3.substring(1,firstComma));
+        param11[ac][0][2][0] = Double.parseDouble(line3.substring(0,firstComma));
         param11[ac][0][2][1] = Double.parseDouble(line3.substring(firstComma+1,secondComma));
         param11[ac][0][2][2] = Double.parseDouble(line3.substring(secondComma+1,line3.length()-3));
     }
