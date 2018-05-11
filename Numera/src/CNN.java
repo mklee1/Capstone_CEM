@@ -1,6 +1,6 @@
 import java.util.Map;
 
-public class CNN {
+public class Prediction {
     
 	private Map<int[], Integer> lol;
 	

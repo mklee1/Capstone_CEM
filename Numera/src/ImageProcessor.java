@@ -1,13 +1,22 @@
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
+import java.awt.image.FilteredImageSource;
+import java.awt.image.ImageFilter;
+import java.awt.image.ImageProducer;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
+import javax.swing.GrayFilter;
 
 public class ImageProcessor {
     
@@ -56,8 +65,50 @@ public class ImageProcessor {
         dirs1.put(7, "bottom left.");
         dirs1.put(8, "left........");
     }
+    
+    public static BufferedImage convertToBufferedImage(Image image) {
+        BufferedImage newImage = new BufferedImage(
+            image.getWidth(null), image.getHeight(null),
+            BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = newImage.createGraphics();
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+        return newImage;
+    }
+    
+    public static void makeGray(BufferedImage img) {
+        for (int x = 0; x < img.getWidth(); ++x)
+        for (int y = 0; y < img.getHeight(); ++y)
+        {
+            int rgb = img.getRGB(x, y);
+            int r = (rgb >> 16) & 0xFF;
+            int g = (rgb >> 8) & 0xFF;
+            int b = (rgb & 0xFF);
 
-    public Image imageResize(String filename, int length, int width) {
+            int grayLevel = (r + g + b) / 3;
+            int gray = (grayLevel << 16) + (grayLevel << 8) + grayLevel; 
+            img.setRGB(x, y, gray);
+        }
+    }
+    
+    public void printPixels(Image img) {
+    	BufferedImage buf = convertToBufferedImage(img);
+        int width = buf.getWidth();
+        int height = buf.getHeight();
+        //Double[][] result = new Double[height][width];
+        
+        for (int row = 0; row < height; row++) {
+        	for (int col = 0; col < width; col++) {
+        		System.out.print(buf.getRGB(col, row) + " ");
+        	}
+        	System.out.println();
+        }
+    }
+    
+    // jpeg img
+    // call imgResize
+    // ndArrayTo2DList
+    public BufferedImage imageResize(String filename, int length, int width) throws IOException {
 
         if (width == -1) {
             width = length;
@@ -69,32 +120,68 @@ public class ImageProcessor {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        
         Image resized = img.getScaledInstance(length, length, Image.SCALE_DEFAULT);
-        return resized;
+        ImageIO.write(convertToBufferedImage(resized), "jpg", new File("resized.jpg"));
+        //System.out.println("Printing pixels...");
+        //printPixels(resized);
+        
+        // original
+        BufferedImage image = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
+        Graphics g = image.getGraphics();
+        g.drawImage(img, 0, 0, null);
+        g.dispose();
+        ImageIO.write(image, "jpg", new File("blackAndWhite1.jpg"));
+        
+        // uncomment this later?
+        // resized
+        //BufferedImage image2 = new BufferedImage(length, length, BufferedImage.TYPE_BYTE_BINARY);
+        //Graphics g2 = image2.getGraphics();
+        //g2.drawImage(resized, 0, 0, null);
+        //g2.dispose();
+        //ImageIO.write(image2, "jpg", new File("blackAndWhite2.jpg"));
+        
+        // compare results later
+        // resized
+        BufferedImage image2 = new BufferedImage(length, length, BufferedImage.TYPE_BYTE_BINARY);
+        Graphics g2 = image2.getGraphics();
+        g2.drawImage(resized, 0, 0, null);
+        g2.dispose();
+        ImageIO.write(image2, "jpg", new File("blackAndWhite2.jpg"));
+        
+        //Image resized = img.getScaledInstance(length, length, Image.SCALE_DEFAULT);
+        //ImageFilter filter = new GrayFilter(true, 50);
+        //ImageProducer producer = new FilteredImageSource(resized.getSource(), filter);
+        //resized = Toolkit.getDefaultToolkit().createImage(producer);
+        // now turn back to BufferedImage
+        //BufferedImage dimg = convertToBufferedImage(resized);
+        //makeGray(dimg);
+        return image2;
     }
 
-    public Double[][] ndarrayTo2DList(double[][][] image) {
+    public Double[][][][] ndarrayTo4DList(BufferedImage img) {
+        int width = img.getWidth();
+        int height = img.getHeight();
+        Double[][] result = new Double[height][width];
         
-        List<Double> row = new ArrayList<>();
-        int length = image.length;
-        int width = image[0].length;
-        Double[][] result = new Double[length][width];
-        for (int i = 0; i < length; i++) {
-            for (int j = 0; j < width; j++) {
-                int add = 0;
-                if (image[i][j][0] > 0) {
-                    add = 1;
-                }
-                row.add((double) add);
-            }
-            Double[] converted = new Double[row.size()];
-            converted = row.toArray(converted);
-            result[i] = converted;
-            // clear row 
-            row.clear();
+        for (int row = 0; row < height; row++) {
+        	for (int col = 0; col < width; col++) {
+        		// 
+        		result[row][col] = (double) (255 - rgbToGray(img.getRGB(col, row)));
+        	}
         }
-        return result;
+        Double[][][] inner= {result};
+        Double[][][][] res = {inner};
+        return res;
+    }
+    
+    public int rgbToGray(int rgb) {
+        int r = (rgb >> 16) & 0xFF;
+        int g = (rgb >> 8) & 0xFF;
+        int b = (rgb & 0xFF);
+
+        int grayLevel = (r + g + b) / 3;
+        return grayLevel;
     }
     
     // print 2D list for testing purposes

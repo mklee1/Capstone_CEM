@@ -1,22 +1,30 @@
-import java.util.Set;
-
 public class WordProblem {
     
 	// should not be mutable
 	private final String description;
-	private final Set<String> solutionSet;
+	private final int solution;
+	private int userAnswer;
 	
-	public WordProblem(String description, Set<String> solutionSet) {
+	public WordProblem(String description, int solution) {
 		this.description = description;
-		this.solutionSet = solutionSet;
+		this.solution = solution;
+		userAnswer = 0;
 	}
 	
 	public String getDescription() {
 		return description;
 	}
 	
-	public boolean containsSolution(String solution) {
-		return solutionSet.contains(solution);
+	public int getSolution() {
+		return solution;
+	}
+	
+	public int getUserAnswer() {
+		return userAnswer;
+	}
+	
+	public void setUserAnswer(int userAnswer) {
+		this.userAnswer = userAnswer;
 	}
 	
 }

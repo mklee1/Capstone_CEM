@@ -2,21 +2,22 @@ import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Optional;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.function.UnaryOperator;
 
 import javax.imageio.ImageIO;
 
@@ -24,14 +25,11 @@ import javafx.animation.Animation;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -41,39 +39,32 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ColorPicker;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
-import javafx.scene.control.TextFormatter.Change;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import javafx.util.StringConverter;
-import javafx.util.converter.IntegerStringConverter;
 
 
 public class Numera extends Application {
     
+	private static final ImageProcessor IP = new ImageProcessor();
+	private static ParamParser pp = null;
 	/**
 	 * string variable needed for proper connection
 	 * to the MySQL database with room table
@@ -113,6 +104,57 @@ public class Numera extends Application {
 	
 	// set up progress indicator stuff
 	final ProgressBar[] pbs = new ProgressBar[1];
+	
+	public static String runPy() {
+		String result = "";
+		try {
+	    	Process p = Runtime.getRuntime().exec("python condensed.py");
+	    	BufferedReader stdInput = new BufferedReader(new 
+	                InputStreamReader(p.getInputStream()));
+	
+           BufferedReader stdError = new BufferedReader(new 
+                InputStreamReader(p.getErrorStream()));
+	    	String s = null;
+	    	result = "";
+	        while ((s = stdInput.readLine()) != null) {
+	        	System.out.println("looping");
+	        	System.out.println(s);
+	        	result = result + s.substring(1,2);
+	        }
+	        System.out.println(result);
+	        System.out.println("Here is the standard error of the command (if any):\n");
+	        while ((s = stdError.readLine()) != null) {
+	            System.out.println(s);
+	        }
+	    }
+	    
+	    catch (Exception e) {
+	    	e.printStackTrace();
+	    	return result;
+	    }
+		return result;
+	}
+	
+	public static void print(Double[][][][] a) {
+    	for (int i = 0; i < a.length; i++) {
+    		for (int j = 0; j < a[0].length; j++) {
+    			for (int k = 0; k < a[0][0].length; k++) {
+    				for (int l = 0; l < a[0][0][0].length; l++) {
+    					System.out.println(a[i][j][k][l]);
+    				}
+    			}
+    		}
+    	}
+    }
+	
+	public static void print(Double[][] a) {
+    	for (int i = 0; i < a.length; i++) {
+    		for (int j = 0; j < a[0].length; j++) {
+    			System.out.print(a[i][j] + " ");
+    		}
+    		System.out.println();
+    	}
+    }
 	
 	private static boolean login(TextField user, TextField pass) {
 		boolean res = false;
@@ -158,7 +200,7 @@ public class Numera extends Application {
 	// used to swap screen to the where
 	// user can select from a variety of
 	// topics
-	private void screenSwap(Pane p) {
+	private static void screenSwap(Pane p) {
 		scene.setRoot(p);
 		// the combo box for the choices user has
 		ObservableList<String> options = 
@@ -403,10 +445,8 @@ public class Numera extends Application {
 		// create word problem instances and then queue
 		while (rs.next()) {
 			String question = rs.getString("problem_text");
-			String answer = rs.getString("problem_answer");
-			Set<String> solutions = new HashSet<>();
-			solutions.add(answer);
-			WordProblem wp = new WordProblem(question, solutions);
+			int answer = Integer.parseInt(rs.getString("problem_answer"));
+			WordProblem wp = new WordProblem(question, answer);
 			list.add(wp);
 		}
 		
@@ -441,9 +481,12 @@ public class Numera extends Application {
 		//Label nameHeader = new Label("Name");
 		Label timeHeader = new Label("Time elapsed");
 		//Label scoreHeader = new Label("Total score");
-		header.getChildren().addAll(timeHeader);
+		
+		//header.getChildren().addAll(timeHeader);
+		
 		header.setLayoutX(hx);
-		header.setLayoutY(hy-50);
+		//header.setLayoutY(hy-50);
+		header.setLayoutY(hy-100);
 		//nameHeader.setId("font3");eodr
 		timeHeader.setId("font2");
 		//scoreHeader.setId("font3");
@@ -462,9 +505,10 @@ public class Numera extends Application {
 		info.setLayoutX(hx);
 		info.setLayoutY(hy);
 		
+		header.getChildren().addAll(timeHeader, time);
 		title.setId("font");
 		title.setLayoutX(midX+50);
-		title.setLayoutY(y);
+		title.setLayoutY(y-50);
 		// we need to make a vertical box that equals length
 		// of the world problems
 		
@@ -480,6 +524,7 @@ public class Numera extends Application {
 		int startY = 250;
 		int padding = 100;
 		int boxHeight = (stageHeight - (startY + padding)) / problemLength;
+		
 		for (int i = 0; i < problemLength; i++) {
 			
 			// we must make two labels
@@ -498,10 +543,32 @@ public class Numera extends Application {
 			head.setId("font4");
 			String check = "\u2713";
 			Label l = null;
-			Button soln = new Button("View answer");
-			soln.setPrefSize(50, 25);
-			
-			if (i % 2 == 0) {
+			Button soln = new Button("View\nanswer");
+			WordProblem wp = problems.get(i);
+			// for each button you need to set up event handler
+			// such that an info dialog box pops up with your answer
+			// and compared answer
+			soln.setOnAction(new EventHandler<ActionEvent>() {
+			    @Override
+			    public void handle(ActionEvent event) {
+			    	Alert alert = new Alert(AlertType.INFORMATION);
+					alert.setTitle("Answer Viewer");
+					alert.setHeaderText("Compare your answer!");
+					alert.setContentText("Your answer: 0"  + "\n"
+					 + "Actual answer: " + wp.getSolution());
+					alert.setWidth(250);
+					alert.setHeight(100);
+					alert.showAndWait();
+			    }
+			});
+			soln.setPrefSize(80, 45);
+			//soln.setId("btn");
+			int s = problems.get(i).getSolution();
+			int a = problems.get(i).getUserAnswer();
+			System.out.println("problem solution: " + s);
+			System.out.println("problem a: " + a);
+			boolean correct = (s == a);
+			if (correct) {
 			    l = new Label(check);
 			    l.setTextFill(Color.GREEN);
 			}
@@ -512,16 +579,34 @@ public class Numera extends Application {
 			}
 			l.setId("result");
 			l.setPrefSize(boxWidth, boxHeight);
-			row.getChildren().addAll(head, l);
+			row.getChildren().addAll(head, l, soln);
 			box.getChildren().add(row);
 			
 		}
-		
+	    
+	    Button home = new Button();
+	    home.setText("Home");
+	    home.setId("btn");
+	    
+	    // redirect client to option screen if he or she clicks on home
+	    home.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+            public void handle(ActionEvent event) {
+				Pane temp = new Pane();
+				temp.setId("second");
+				idx = 0;
+                screenSwap(temp);
+            }
+        });
+	    
+	    home.setLayoutX(300);
+	    home.setLayoutY(500);
+	    home.setPrefSize(75, 35);
 		int boxX = (int) (700 * ((double) 2/3));
 		int boxY = 250;
 		box.setLayoutX(boxX * .40);
-		box.setLayoutY(boxY);
-		p.getChildren().addAll(header, title, info, box);
+		box.setLayoutY(boxY-100);
+		p.getChildren().addAll(header, title, info, box, home);
 		p.setId("first");
 	    scene.setRoot(p);
 	}
@@ -530,7 +615,7 @@ public class Numera extends Application {
 	// to calculate number of problems in current table
 	// mode is input parameter which tells code 
 	// which table to fetch from
-	private int fetchProblemSize(String mode) {
+	private static int fetchProblemSize(String mode) {
 		Connection conn = null;
 		int count = 0;
 		try {
@@ -551,7 +636,56 @@ public class Numera extends Application {
 		return count;
 	}
 	
-	private void generatePractice(String option, Pane prev) throws AWTException, IOException {
+    private static int argmax(Double[] vals) {
+		Double max = vals[0];
+		int idx = 0;
+		
+		for (int i = 1; i < vals.length; i++) {
+			if (vals[i] > max) {
+				max = vals[i];
+				idx = i;
+			}
+		}
+		
+		return idx;
+	}
+	
+	public static void write(Double[][][][] x) throws FileNotFoundException {
+    	try (PrintWriter pw = new PrintWriter(new File("param.txt"))) {
+    		for (int i = 0; i < x.length; i++) {
+    			for (int j = 0; j < x[0].length; j++) {
+    			    for (int k = 0; k < x[0][0].length; k++) {
+    			    	for (int l = 0; l < x[0][0][0].length; l++) {
+    			    		pw.print(x[i][j][k][l] + " ");
+    			    	}
+    			    }
+    			}
+    			pw.println();
+    		}
+    	}
+    }
+	
+	
+	private static void screenShot() {
+        BufferedImage img = null;
+        System.out.println("Capturing screenshot...");
+		try {
+			// 570, 268, 347, 245
+			img = new Robot().createScreenCapture(new Rectangle(570, 270, 347, 245));
+		} catch (AWTException e) {
+		    // TODO Auto-generated catch block
+		    e.printStackTrace();
+		}
+    	try {
+    		System.out.println("Capturing screenshot...");
+			ImageIO.write(img, "png", new File("screenshot.jpg"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+	
+	private static void generatePractice(String option, Pane prev) throws AWTException, IOException {
 		Pane root = new Pane();
 		
 		
@@ -575,17 +709,17 @@ public class Numera extends Application {
 	    	}
 	    	else if (option.equals("Subtraction")) {
 	    		READ_OBJECT = "select * FROM sub_table";
-	    		CURRENT_TABLE = "SUB_TABLE";
+	    		CURRENT_TABLE = "sub_table";
 	    	}
 	    	
 	    	else if (option.equals("Multiplication")) {
 	    		READ_OBJECT = "select * FROM mult_table";
-	    		CURRENT_TABLE = "MULT_TABLE";
+	    		CURRENT_TABLE = "mult_table";
 	    	}
 	    	
 	    	else if (option.equals("Division")) {
 	    		READ_OBJECT = "select * FROM div_table";
-	    		CURRENT_TABLE = "DIV_TABLE";
+	    		CURRENT_TABLE = "div_table";
 	    	}
 	    	Statement stmt = conn.createStatement();
 	    	ResultSet rs = stmt.executeQuery(READ_OBJECT);
@@ -668,13 +802,17 @@ public class Numera extends Application {
 		// put in a vertical box
 		// with a font right below
 		
-		
 		// for this action handler increment the index variable
 		// and be sure to correctly update the progress bar
 		next.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
+				screenShot();
+				int res = Integer.parseInt(runPy());
+				System.out.println("res: " + res);
+				int ans = res;
 				if (idx < problems.size() - 1) {
+					problems.get(idx).setUserAnswer(ans);
 					back.setDisable(false);
 				    idx++;
 				    pointer = problems.get(idx);
@@ -702,6 +840,7 @@ public class Numera extends Application {
 				    	System.out.println("CANCEL case");
 				    }
 				}
+				
 			}
 		});
 		
@@ -710,21 +849,21 @@ public class Numera extends Application {
 		
 		// OVERRIDE
 		// RECTANGLE CODE HERE
-		javafx.scene.shape.Rectangle rect = new javafx.scene.shape.Rectangle(205, 60);
-		rect.setStroke(Color.BLACK);
-		rect.setFill(null);
-		rect.setStrokeWidth(3);
-		rect.setArcWidth(25);
-		rect.setArcHeight(25);
+		//javafx.scene.shape.Rectangle rect = new javafx.scene.shape.Rectangle(250, 60);
+		//rect.setStroke(Color.BLACK);
+		//rect.setFill(null);
+		//rect.setStrokeWidth(3);
+		//rect.setArcWidth(25);
+		//rect.setArcHeight(25);
 		
-	    rect.setLayoutX(boxX-20);
-		rect.setLayoutY(boxY);
+	    //rect.setLayoutX(boxX-20);
+		//rect.setLayoutY(boxY);
 		
 		ptext.setLayoutX(boxX);
 		ptext.setLayoutY(boxY);
 		
 		root.getChildren().add(ptext);
-		root.getChildren().add(rect);
+		//root.getChildren().add(rect);
 		root.getChildren().add(back);
 		root.getChildren().add(next);
 		root.getChildren().add(vb);
@@ -742,14 +881,14 @@ public class Numera extends Application {
 		GraphicsContext gc = canvas.getGraphicsContext2D();
 		
 		// make buttons to take a screenshot and a button to erase
-		Button submit = new Button();
-		submit.setId("traverse");
-		submit.setText("Screenshot");
-		submit.setPrefSize(90, 25);
-		submit.setLayoutX(300);
-		submit.setLayoutY(315);
+		//Button submit = new Button();
+		//submit.setId("traverse");
+		//submit.setText("Screenshot");
+		//submit.setPrefSize(90, 25);
+		//submit.setLayoutX(300);
+		//submit.setLayoutY(315);
 		
-		submit.setOnAction(new EventHandler<ActionEvent>() {
+		/*submit.setOnAction(new EventHandler<ActionEvent>() {
 			 
             @Override
             public void handle(ActionEvent event) {
@@ -761,13 +900,14 @@ public class Numera extends Application {
 					e.printStackTrace();
 				}
         		try {
-					ImageIO.write(img, "png", new File("screenshot.png"));
+        			System.out.println("Capturing screenshot...");
+					ImageIO.write(img, "jpg", new File("screenshot.jpg"));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
             }
-        });
+        });*/
 		
 		Button eraser = new Button();
 		eraser.setId("btn");
@@ -870,9 +1010,13 @@ public class Numera extends Application {
 				@Override public void run() {
 					
 					// must cancel immediately
+					// set up alert box to 
+					// force user to the score board
 					if (min == 0 && sec == 0) {
 						elapsed.setText("Time up!");
 						timer.cancel();
+						scoreBoard(problemLen);
+						//scoreBoard(fetchProblemSize(CURRENT_TABLE));
 					}
 					
 					else if (sec == 0) {
@@ -963,7 +1107,7 @@ public class Numera extends Application {
 		thick.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				gc.setLineWidth(3);
+				gc.setLineWidth(20);
 			}
 		});
 		
@@ -1032,8 +1176,10 @@ public class Numera extends Application {
 	}
 	
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage) throws IOException {
     	
+    	pp = new ParamParser();
+    	pp.parse_params();
     	ref = primaryStage;
     	int posX = 300;
     	
